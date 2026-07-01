@@ -645,8 +645,42 @@ function packWeekSegments(weekStart,weekEnd){
   return segs;
 }
 
-function addEmployee(){const i=document.getElementById("employeeName"),name=i.value.trim();if(!name)return alert("Bitte Namen eintragen.");state.employees.push({id:crypto.randomUUID(),name});i.value="";save();}
-function deleteEmployee(id){if(!confirm("Mitarbeiter entfernen? Vorhandene Abmeldungen bleiben im Verlauf."))return;state.employees=state.employees.filter(e=>e.id!==id);save();}
+async function addEmployee(){
+  const i=document.getElementById("employeeName"),name=i.value.trim();
+  if(!name)return alert("Bitte Namen eintragen.");
+  const emp={id:crypto.randomUUID(),name};
+  try{
+    const {error}=await supabaseClient
+      .from("mitarbeiter")
+      .insert([{id:emp.id,name:emp.name}]);
+    if(error)throw error;
+  }catch(err){
+    console.error("Supabase Mitarbeiter speichern Fehler:",err);
+    alert("Mitarbeiter konnte nicht in Supabase gespeichert werden. Prüfe Tabelle und Policies.");
+    return;
+  }
+  state.employees.push(emp);
+  i.value="";
+  save();
+  await loadEmployeesFromSupabase();
+}
+async function deleteEmployee(id){
+  if(!confirm("Mitarbeiter entfernen? Vorhandene Abmeldungen bleiben im Verlauf."))return;
+  try{
+    const {error}=await supabaseClient
+      .from("mitarbeiter")
+      .delete()
+      .eq("id",id);
+    if(error)throw error;
+  }catch(err){
+    console.error("Supabase Mitarbeiter löschen Fehler:",err);
+    alert("Mitarbeiter konnte nicht in Supabase gelöscht werden. Prüfe die Delete-Policy.");
+    return;
+  }
+  state.employees=state.employees.filter(e=>e.id!==id);
+  save();
+  await loadEmployeesFromSupabase();
+}
 async function addAbsence(){
   const employeeId=document.getElementById("absenceEmployee").value,from=document.getElementById("absenceFrom").value,to=document.getElementById("absenceTo").value,reason=document.getElementById("absenceReason").value.trim();
   if(!employeeId||!from||!to)return alert("Bitte Mitarbeiter und Datum ausfüllen.");
@@ -660,7 +694,12 @@ async function parseDiscordMessage(){
   const raw=document.getElementById("discordMessage").value.trim(); if(!raw)return alert("Bitte Nachricht einfügen.");
   const p=extractDiscordData(raw); if(!p.name)return alert("Name nicht erkannt."); if(!p.duration)return alert("Datum/Dauer nicht erkannt.");
   const dates=parseDurationToDates(p.duration); if(!dates)return alert("Dauer konnte nicht gelesen werden.");
-  let emp=findEmployeeByName(p.name); if(!emp){emp={id:crypto.randomUUID(),name:normalizeDisplayName(p.name)};state.employees.push(emp);}
+  let emp=findEmployeeByName(p.name);
+  if(!emp){
+    emp={id:crypto.randomUUID(),name:normalizeDisplayName(p.name)};
+    state.employees.push(emp);
+    await saveEmployeeToSupabase(emp);
+  }
   const absence={id:crypto.randomUUID(),employeeId:emp.id,from:dates.from,to:dates.to,reason:p.reason||""};
   state.absences.push(absence);
   await saveAbsenceToSupabase(absence);
@@ -725,6 +764,33 @@ async function deleteAbsence(id){
   await loadAbsencesFromSupabase();
 }
 
+
+async function saveEmployeeToSupabase(emp){
+  try{
+    const {error}=await supabaseClient
+      .from("mitarbeiter")
+      .upsert([{id:emp.id,name:emp.name}],{onConflict:"id"});
+    if(error)throw error;
+  }catch(err){
+    console.error("Supabase Mitarbeiter Auto-Speichern Fehler:",err);
+  }
+}
+async function loadEmployeesFromSupabase(){
+  try{
+    const {data,error}=await supabaseClient
+      .from("mitarbeiter")
+      .select("id,name")
+      .order("name",{ascending:true});
+    if(error)throw error;
+    if(Array.isArray(data)){
+      state.employees=data.map(e=>({id:e.id,name:e.name})).filter(e=>e.id&&e.name);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      render();
+    }
+  }catch(err){
+    console.error("Supabase Mitarbeiter laden Fehler:",err);
+  }
+}
 async function loadAbsencesFromSupabase(){
   try{
     const {data,error}=await supabaseClient
@@ -742,7 +808,7 @@ async function loadAbsencesFromSupabase(){
       const key=name.toLowerCase();
       let emp=employeesByName.get(key);
       if(!emp){
-        emp={id:crypto.randomUUID(),name};
+        emp={id:crypto.randomUUID(),name,temp:true};
         state.employees.push(emp);
         employeesByName.set(key,emp);
       }
@@ -791,8 +857,9 @@ function tableHtml(rows,withStatus=false){
 }
 function renderAllTable(){const rows=[...state.absences].sort((a,b)=>b.from.localeCompare(a.from));document.getElementById("allTable").innerHTML=rows.length?tableHtml(rows,false):'<div class="empty">Noch keine Abmeldungen gespeichert.</div>'}
 function renderEmployees(){
-  const sel=document.getElementById("absenceEmployee"); sel.innerHTML=state.employees.length?state.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(""):'<option value="">Noch kein Mitarbeiter angelegt</option>';
-  document.getElementById("employeeList").innerHTML=state.employees.length?`<table class="table"><tbody>${state.employees.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<tr><td>${escapeHtml(e.name)}</td><td style="text-align:right"><button class="small danger" onclick="deleteEmployee('${e.id}')">Entfernen</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Noch keine Mitarbeiter angelegt.</div>';
+  const realEmployees=state.employees.filter(e=>!e.temp);
+  const sel=document.getElementById("absenceEmployee"); sel.innerHTML=realEmployees.length?realEmployees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(""):'<option value="">Noch kein Mitarbeiter angelegt</option>';
+  document.getElementById("employeeList").innerHTML=realEmployees.length?`<table class="table"><tbody>${realEmployees.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<tr><td>${escapeHtml(e.name)}</td><td style="text-align:right"><button class="small danger" onclick="deleteEmployee('${e.id}')">Entfernen</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Noch keine Mitarbeiter angelegt.</div>';
 }
 function renderCurrentPage(){if(currentPage==="month")renderMonthCalendar();if(currentPage==="week")renderWeekTable();if(currentPage==="entry")renderEmployees();if(currentPage==="all")renderAllTable();}
 function render(){renderCurrentPage()}
@@ -806,7 +873,7 @@ document.getElementById("search").addEventListener("input",renderWeekTable);
 document.getElementById("absenceFrom").value=todayISO();document.getElementById("absenceTo").value=todayISO();
 const now=new Date();document.getElementById("todayLabel").textContent=now.toLocaleDateString("de-DE",{day:"2-digit",month:"long",year:"numeric"});document.getElementById("kwLabel").textContent=`${now.toLocaleDateString("de-DE",{weekday:"long"})}, KW ${calendarWeek(now)}`;
 render();
-loadAbsencesFromSupabase();
+loadEmployeesFromSupabase().then(loadAbsencesFromSupabase);
 </script>
 </body>
 </html>
