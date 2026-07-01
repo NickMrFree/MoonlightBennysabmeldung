@@ -707,7 +707,23 @@ function saveEditedAbsence(){
   if(!employeeId||!from||!to)return alert("Bitte ausfüllen."); if(parseDate(to)<parseDate(from))return alert("Bis darf nicht vor Von liegen.");
   a.employeeId=employeeId;a.from=from;a.to=to;a.reason=reason;closeEditModal();save();
 }
-function deleteAbsence(id){if(!confirm("Abmeldung löschen?"))return;state.absences=state.absences.filter(a=>a.id!==id);save()}
+async function deleteAbsence(id){
+  if(!confirm("Abmeldung löschen?"))return;
+  try{
+    const {error}=await supabaseClient
+      .from("abmeldungen")
+      .delete()
+      .eq("id",id);
+    if(error)throw error;
+  }catch(err){
+    console.error("Supabase Löschen Fehler:",err);
+    alert("Die Abmeldung konnte nicht in Supabase gelöscht werden. Prüfe die Delete-Policy.");
+    return;
+  }
+  state.absences=state.absences.filter(a=>a.id!==id);
+  save();
+  await loadAbsencesFromSupabase();
+}
 
 async function loadAbsencesFromSupabase(){
   try{
