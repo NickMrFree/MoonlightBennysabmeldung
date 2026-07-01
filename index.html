@@ -555,9 +555,12 @@ input:focus,select:focus,textarea:focus{
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const STORAGE_KEY="mitarbeiter_abmeldungen_v1";
-const FORMSPREE_ENDPOINT="https://formspree.io/f/mvzjwdln";
+const SUPABASE_URL="https://vtespxroltbvmztgmhcz.supabase.co";
+const SUPABASE_KEY="sb_publishable_g04wr4xfkWQS_dZctVVFYw_RZiee-0r";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"employees":[],"absences":[]}');
 let currentPage="month",monthOffset=0,weekOffset=0,editingAbsenceId=null;
 const colors=["#8b5cf6","#4e8cff","#20b9d6","#2cc7a0","#d9b742","#e98336","#ef5350","#d84b8f"];
@@ -650,7 +653,7 @@ async function addAbsence(){
   if(parseDate(to)<parseDate(from))return alert("Bis darf nicht vor Von liegen.");
   const absence={id:crypto.randomUUID(),employeeId,from,to,reason};
   state.absences.push(absence);
-  await sendAbsenceToFormspree(absence);
+  await saveAbsenceToSupabase(absence);
   document.getElementById("absenceReason").value=""; save(); showPage("month");
 }
 async function parseDiscordMessage(){
@@ -660,7 +663,7 @@ async function parseDiscordMessage(){
   let emp=findEmployeeByName(p.name); if(!emp){emp={id:crypto.randomUUID(),name:normalizeDisplayName(p.name)};state.employees.push(emp);}
   const absence={id:crypto.randomUUID(),employeeId:emp.id,from:dates.from,to:dates.to,reason:p.reason||""};
   state.absences.push(absence);
-  await sendAbsenceToFormspree(absence);
+  await saveAbsenceToSupabase(absence);
   document.getElementById("discordMessage").value=""; save(); showPage("month");
 }
 function extractDiscordData(raw){
@@ -705,25 +708,21 @@ function saveEditedAbsence(){
   a.employeeId=employeeId;a.from=from;a.to=to;a.reason=reason;closeEditModal();save();
 }
 function deleteAbsence(id){if(!confirm("Abmeldung löschen?"))return;state.absences=state.absences.filter(a=>a.id!==id);save()}
-async function sendAbsenceToFormspree(absence){
+async function saveAbsenceToSupabase(absence){
   try{
-    const payload={
-      _subject:"Neue Benny's Moonlight Abmeldung",
-      mitarbeiter:employeeName(absence.employeeId),
-      von:formatDate(absence.from),
-      bis:formatDate(absence.to),
-      dauer:`${daysBetween(absence.from,absence.to)} Tag(e)`,
-      grund:absence.reason||"-",
-      gespeichert_am:new Date().toLocaleString("de-DE")
-    };
-    const res=await fetch(FORMSPREE_ENDPOINT,{
-      method:"POST",
-      headers:{"Accept":"application/json","Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-    if(!res.ok)throw new Error("Formspree Fehler");
+    const {error}=await supabaseClient
+      .from("abmeldungen")
+      .insert([{
+        mitarbeiter:employeeName(absence.employeeId),
+        von:absence.from,
+        bis:absence.to,
+        dauer:`${daysBetween(absence.from,absence.to)} Tag(e)`,
+        grund:absence.reason||null
+      }]);
+    if(error)throw error;
   }catch(err){
-    alert("Die Abmeldung wurde lokal gespeichert, konnte aber nicht an Formspree gesendet werden. Bitte Internet/Formspree prüfen.");
+    console.error("Supabase Fehler:",err);
+    alert("Die Abmeldung wurde lokal gespeichert, konnte aber nicht in Supabase gespeichert werden. Prüfe Tabelle, RLS-Policy und Console.");
   }
 }
 function renderWeekTable(){
