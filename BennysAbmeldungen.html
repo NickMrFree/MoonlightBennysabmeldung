@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benny's Moonlight · Abmeldungen</title>
+<style>
+:root{
+  --bg:#07101f;
+  --sidebar:#0b1426;
+  --panel:#0f1a2f;
+  --panel2:#111d34;
+  --panel3:#17243d;
+  --line:#22304c;
+  --line2:#2d3d60;
+  --text:#eef4ff;
+  --muted:#8fa2c0;
+  --muted2:#64748b;
+  --purple:#7c5cff;
+  --purple2:#9b7bff;
+  --blue:#4e8cff;
+  --cyan:#20b9d6;
+  --green:#2cc7a0;
+  --yellow:#d9b742;
+  --orange:#e98336;
+  --red:#ef5350;
+  --pink:#d84b8f;
+  --shadow:0 24px 70px rgba(0,0,0,.35);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(124,92,255,.20),transparent 26%),
+    radial-gradient(circle at 90% 8%,rgba(32,185,214,.12),transparent 28%),
+    linear-gradient(140deg,#050b16,#091326 55%,#10153a);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  overflow:hidden;
+}
+button,input,select,textarea{font:inherit}
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-columns:260px 1fr;
+}
+.sidebar{
+  background:linear-gradient(180deg,#0b1426,#081120);
+  border-right:1px solid var(--line);
+  padding:22px 18px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.brand{
+  padding:0 6px 20px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  margin-bottom:20px;
+}
+.brand h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.03em;
+  line-height:1.1;
+}
+.brand p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+.primary-btn{
+  width:100%;
+  border:0;
+  border-radius:10px;
+  padding:13px 14px;
+  margin:0 0 18px;
+  color:white;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  cursor:pointer;
+  font-weight:900;
+  box-shadow:0 12px 28px rgba(124,92,255,.24);
+}
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.nav button{
+  border:0;
+  border-radius:9px;
+  padding:12px 13px;
+  background:transparent;
+  color:#cbd7ee;
+  cursor:pointer;
+  text-align:left;
+  font-weight:800;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.nav button.active{
+  background:linear-gradient(90deg,rgba(124,92,255,.22),rgba(78,140,255,.10));
+  color:#b9a7ff;
+  box-shadow:inset 3px 0 0 var(--purple);
+}
+.side-footer{
+  margin-top:auto;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  color:var(--muted);
+  font-size:12px;
+  background:rgba(255,255,255,.03);
+}
+.side-footer strong{
+  display:block;
+  color:#dbeafe;
+  margin:4px 0;
+  font-size:13px;
+}
+.main{
+  min-width:0;
+  overflow:auto;
+  padding:24px 28px 34px;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+  margin-bottom:22px;
+}
+.page-title h2{
+  margin:0;
+  font-size:30px;
+  letter-spacing:-.04em;
+}
+.page-title p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:14px;
+}
+.userbox{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#dbeafe;
+  font-weight:850;
+}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#25324f;color:#cbd5e1;
+}
+.page{display:none}
+.page.active{display:block}
+.calendar-card{
+  background:rgba(15,26,47,.78);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.cal-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:16px 18px;
+}
+.cal-left,.cal-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.month-name{
+  font-size:18px;
+  font-weight:950;
+  margin-left:8px;
+}
+.btn{
+  border:1px solid var(--line);
+  background:#0d172a;
+  color:#dbeafe;
+  border-radius:8px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:850;
+}
+.btn:hover{background:#14213a}
+.btn.active{
+  background:linear-gradient(135deg,rgba(124,92,255,.82),rgba(124,92,255,.52));
+  border-color:rgba(124,92,255,.55);
+  color:white;
+}
+.calendar{
+  border-top:1px solid var(--line);
+}
+.weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  background:linear-gradient(180deg,#1a2742,#17233c);
+  border-bottom:1px solid var(--line);
+}
+.weekdays div{
+  padding:12px 8px;
+  text-align:center;
+  color:#cbd7ee;
+  font-weight:950;
+  font-size:12px;
+}
+.week{
+  position:relative;
+  min-height:112px;
+  border-bottom:1px solid var(--line);
+}
+.week:last-child{border-bottom:0}
+.days{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+}
+.day{
+  border-right:1px solid var(--line);
+  background:rgba(15,26,47,.68);
+  padding:10px 10px;
+}
+.day:last-child{border-right:0}
+.day.other{background:rgba(10,18,33,.72)}
+.day.weekend{background:rgba(12,22,39,.78)}
+.day.today{
+  background:rgba(124,92,255,.10);
+  box-shadow:inset 0 0 0 1px rgba(124,92,255,.50);
+}
+.date{
+  color:#dbeafe;
+  font-weight:950;
+  font-size:13px;
+  position:relative;
+  z-index:2;
+}
+.day.other .date{color:#51617e}
+.day.today .date{
+  width:27px;height:27px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:white;
+}
+.events{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.event{
+  position:absolute;
+  height:26px;
+  line-height:26px;
+  padding:0 12px;
+  border:0;
+  margin:0;
+  color:white;
+  font-size:12px;
+  font-weight:950;
+  cursor:pointer;
+  pointer-events:auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);
+  border-radius:4px;
+}
+.event.start{border-top-left-radius:8px;border-bottom-left-radius:8px}
+.event.end{border-top-right-radius:8px;border-bottom-right-radius:8px}
+.event:hover{filter:brightness(1.08)}
+.card{
+  background:rgba(15,26,47,.82);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 16px 45px rgba(0,0,0,.22);
+  padding:18px;
+  margin-bottom:16px;
+}
+.card h3{
+  margin:0 0 14px;
+  font-size:18px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:16px;
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+label{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  margin:10px 0 6px;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line2);
+  background:#0b1426;
+  color:#eaf1ff;
+  border-radius:10px;
+  padding:10px 11px;
+  outline:none;
+}
+textarea{min-height:132px;resize:vertical;line-height:1.45}
+input::placeholder,textarea::placeholder{color:#60718f}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px rgba(124,92,255,.14);
+}
+.form-btn{
+  border:0;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:white;
+  border-radius:10px;
+  padding:10px 13px;
+  margin-top:12px;
+  cursor:pointer;
+  font-weight:950;
+}
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:12px;
+  font-size:13px;
+}
+.table th,.table td{
+  padding:10px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+}
+.table tr:last-child td{border-bottom:0}
+.table th{
+  background:#17243d;
+  color:#cbd7ee;
+  font-size:12px;
+}
+.small{
+  border:1px solid var(--line2);
+  background:#111d34;
+  color:#dbeafe;
+  border-radius:8px;
+  padding:6px 8px;
+  cursor:pointer;
+  font-weight:850;
+}
+.danger{background:#dc2626;color:white;border-color:#dc2626}
+.empty{
+  border:1px dashed var(--line2);
+  color:var(--muted);
+  border-radius:12px;
+  padding:14px;
+}
+.pill{
+  background:rgba(34,197,94,.14);
+  color:#86efac;
+  border:1px solid rgba(34,197,94,.28);
+  padding:4px 8px;
+  border-radius:99px;
+  font-size:11px;
+  font-weight:950;
+}
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.72);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99;
+  padding:18px;
+}
+.modal-backdrop.active{display:flex}
+.modal{
+  width:min(520px,100%);
+  background:#0f1a2f;
+  border:1px solid var(--line2);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.modal h3{margin:0 0 12px}
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:14px;
+}
+@media(max-width:900px){
+  body{overflow:auto}
+  .app{height:auto;grid-template-columns:1fr}
+  .sidebar{position:relative}
+  .main{padding:18px}
+  .grid,.row{grid-template-columns:1fr}
+  .week{min-height:98px}
+  .event{height:22px;line-height:22px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Benny's Moonlight</h1>
+      <p>Abmeldungen</p>
+    </div>
+    <button class="primary-btn" onclick="showPage('entry')">＋ Abmeldung eintragen</button>
+    
+      <button class="primary-btn" onclick="window.open('https://bennys.moonlightv.de/panel','_blank')">🖥️ Panel öffnen</button>
+      <button class="primary-btn" style="background:linear-gradient(135deg,#20b9d6,#4e8cff);margin-top:-6px;" onclick="window.open('https://coolors.co/colors','_blank')">🎨 Coolors</button>
+
+    <div class="nav">
+      <button id="navMonth" class="active" onclick="showPage('month')">▣ Kalender</button>
+      <button id="navWeek" onclick="showPage('week')">☷ Wochenansicht</button>
+      <button id="navEntry" onclick="showPage('entry')">◎ Mitarbeiter</button>
+      <button id="navAll" onclick="showPage('all')">☑ Abmeldungen</button>
+      <button id="navBackup" onclick="showPage('backup')">◷ Backup</button>
+    </div>
+    <div class="side-footer">
+      Heute
+      <strong id="todayLabel"></strong>
+      <span id="kwLabel"></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="page-title">
+        <h2 id="mainTitle">Kalender</h2>
+        <p id="mainSub">Monatsübersicht der Abmeldungen</p>
+      </div>
+      <div class="userbox"><div class="avatar">●</div> Benny <span style="color:#8fa2c0;">☾</span></div>
+    </div>
+
+    <section id="pageMonth" class="page active">
+      <div class="calendar-card">
+        <div class="cal-toolbar">
+          <div class="cal-left">
+            <button class="btn" onclick="goToCurrentMonth()">Heute</button>
+            <button class="btn" onclick="changeMonth(-1)">‹</button>
+            <button class="btn" onclick="changeMonth(1)">›</button>
+            <div class="month-name" id="monthInfo"></div>
+          </div>
+          <div class="cal-right">
+            <button class="btn active">Monat</button>
+            <button class="btn" onclick="showPage('week')">Woche</button>
+            <button class="btn" onclick="showPage('entry')">Verwaltung</button>
+          </div>
+        </div>
+        <div id="monthCalendar"></div>
+      </div>
+    </section>
+
+    <section id="pageWeek" class="page">
+      <div class="card">
+        <div class="cal-toolbar" style="padding:0 0 12px;">
+          <div class="cal-left">
+            <button class="btn" onclick="goToCurrentWeek()">Aktuelle Woche</button>
+            <button class="btn" onclick="changeWeek(-1)">‹</button>
+            <button class="btn" onclick="changeWeek(1)">›</button>
+            <div class="month-name" id="weekInfo"></div>
+          </div>
+          <input id="search" placeholder="Suchen nach Mitarbeiter oder Grund" style="max-width:310px;">
+        </div>
+        <div id="weekTable"></div>
+      </div>
+    </section>
+
+    <section id="pageEntry" class="page">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Discord-Nachricht einfügen</h3>
+            <label>Nachricht</label>
+            <textarea id="discordMessage" placeholder="Name : Raffi&#10;Datum : 28.06.2026&#10;Grund : zu warm zum zocken"></textarea>
+            <button class="form-btn" onclick="parseDiscordMessage()">Auswerten & eintragen</button>
+          </div>
+          <div class="card">
+            <h3>Manuell eintragen</h3>
+            <label>Mitarbeiter</label>
+            <select id="absenceEmployee"></select>
+            <div class="row">
+              <div><label>Von</label><input id="absenceFrom" type="date"></div>
+              <div><label>Bis einschließlich</label><input id="absenceTo" type="date"></div>
+            </div>
+            <label>Grund optional</label>
+            <input id="absenceReason" placeholder="z. B. Krankheit, Urlaub, Arzttermin">
+            <button class="form-btn" onclick="addAbsence()">Abmeldung speichern</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h3>Mitarbeiter anlegen</h3>
+            <label>Name</label>
+            <input id="employeeName" placeholder="Vorname Nachname">
+            <button class="form-btn" onclick="addEmployee()">Mitarbeiter speichern</button>
+          </div>
+          <div class="card">
+            <h3>Mitarbeiterliste</h3>
+            <div id="employeeList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pageAll" class="page">
+      <div class="card">
+        <h3>Alle Abmeldungen</h3>
+        <div id="allTable"></div>
+      </div>
+    </section>
+
+    <section id="pageBackup" class="page">
+      <div class="card">
+        <h3>Datensicherung</h3>
+        <button class="form-btn" onclick="exportData()">Backup exportieren</button>
+        <label>Backup importieren</label>
+        <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="editModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Abmeldung bearbeiten</h3>
+    <label>Mitarbeiter</label>
+    <select id="editEmployee"></select>
+    <div class="row">
+      <div><label>Von</label><input id="editFrom" type="date"></div>
+      <div><label>Bis einschließlich</label><input id="editTo" type="date"></div>
+    </div>
+    <label>Grund optional</label>
+    <input id="editReason">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEditModal()">Abbrechen</button>
+      <button class="form-btn" onclick="saveEditedAbsence()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY="mitarbeiter_abmeldungen_v1";
+let state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"employees":[],"absences":[]}');
+let currentPage="month",monthOffset=0,weekOffset=0,editingAbsenceId=null;
+const colors=["#8b5cf6","#4e8cff","#20b9d6","#2cc7a0","#d9b742","#e98336","#ef5350","#d84b8f"];
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));render();}
+function cap(t){return t.charAt(0).toUpperCase()+t.slice(1)}
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page"+cap(page)).classList.add("active");
+  document.getElementById("nav"+cap(page)).classList.add("active");
+  const titles={month:["Kalender","Monatsübersicht der Abmeldungen"],week:["Wochenansicht","Abmeldungen der ausgewählten Woche"],entry:["Verwaltung","Mitarbeiter und neue Abmeldungen"],all:["Abmeldungen","Alle gespeicherten Einträge"],backup:["Backup","Daten sichern und wiederherstellen"]};
+  document.getElementById("mainTitle").textContent=titles[page][0];
+  document.getElementById("mainSub").textContent=titles[page][1];
+  renderCurrentPage();
+}
+function parseDate(v){const[y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d)}
+function toISODate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`}
+function todayISO(){return toISODate(new Date())}
+function formatDate(v){return v?parseDate(v).toLocaleDateString("de-DE"):"-"}
+function daysBetween(f,t){return Math.round((parseDate(t)-parseDate(f))/86400000)+1}
+function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+function employeeName(id){const e=state.employees.find(x=>x.id===id);return e?e.name:"Gelöschter Mitarbeiter"}
+function employeeColor(id){let s=0;String(id).split("").forEach(c=>s+=c.charCodeAt(0));return colors[s%colors.length]}
+function getMonthBase(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+monthOffset,1)}
+function changeMonth(d){monthOffset+=d;renderMonthCalendar()}
+function goToCurrentMonth(){monthOffset=0;renderMonthCalendar()}
+function getWeekRange(){const d=new Date();d.setDate(d.getDate()+weekOffset*7);const day=d.getDay()||7;const monday=new Date(d);monday.setDate(d.getDate()-day+1);monday.setHours(0,0,0,0);const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);sunday.setHours(23,59,59,999);return{monday,sunday}}
+function changeWeek(d){weekOffset+=d;renderWeekTable()}
+function goToCurrentWeek(){weekOffset=0;renderWeekTable()}
+
+function renderMonthCalendar(){
+  const base=getMonthBase();
+  const monthStart=new Date(base.getFullYear(),base.getMonth(),1);
+  const start=new Date(monthStart); const startDay=start.getDay()||7; start.setDate(start.getDate()-startDay+1);
+  const end=new Date(base.getFullYear(),base.getMonth()+1,0);
+  const endGrid=new Date(end); const endDay=endGrid.getDay()||7; endGrid.setDate(endGrid.getDate()+(7-endDay));
+  const weeks=Math.round((endGrid-start)/86400000/7)+1;
+  const monthName=base.toLocaleDateString("de-DE",{month:"long",year:"numeric"});
+  document.getElementById("monthInfo").textContent=monthName.charAt(0).toUpperCase()+monthName.slice(1);
+  const weekdays=["MO","DI","MI","DO","FR","SA","SO"];
+  let html='<div class="calendar"><div class="weekdays">'+weekdays.map(d=>`<div>${d}</div>`).join("")+'</div>';
+  const today=parseDate(todayISO());
+  for(let w=0;w<weeks;w++){
+    const weekStart=new Date(start); weekStart.setDate(start.getDate()+w*7);
+    const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+    const segments=packWeekSegments(weekStart,weekEnd);
+    const laneCount=Math.max(segments.reduce((m,s)=>Math.max(m,s.lane+1),0),1);
+    const height=Math.max(112,58+laneCount*31);
+    html+=`<div class="week" style="height:${height}px">`;
+    html+='<div class="days">';
+    for(let i=0;i<7;i++){
+      const date=new Date(weekStart); date.setDate(weekStart.getDate()+i);
+      const cls=["day",date.getMonth()===base.getMonth()?"":"other",(date.getDay()===0||date.getDay()===6)?"weekend":"",isSameDay(date,today)?"today":""].filter(Boolean).join(" ");
+      html+=`<div class="${cls}"><div class="date">${date.getDate()}</div></div>`;
+    }
+    html+='</div><div class="events">';
+    segments.forEach(s=>{
+      const gap=8;
+      const left=`calc(${((s.startCol-1)/7)*100}% + ${gap}px)`;
+      const width=`calc(${(s.span/7)*100}% - ${gap*2}px)`;
+      html+=`<button class="event ${s.starts?'start':''} ${s.ends?'end':''}" style="left:${left};width:${width};top:${45+s.lane*31}px;background:${employeeColor(s.absence.employeeId)}" onclick="openEditModal('${s.absence.id}')" title="${escapeHtml(employeeName(s.absence.employeeId))} · ${formatDate(s.absence.from)} bis ${formatDate(s.absence.to)}${s.absence.reason?' · '+escapeHtml(s.absence.reason):''}">${escapeHtml(employeeName(s.absence.employeeId))}</button>`;
+    });
+    html+='</div></div>';
+  }
+  html+='</div>';
+  document.getElementById("monthCalendar").innerHTML=html;
+}
+function packWeekSegments(weekStart,weekEnd){
+  const segs=state.absences.filter(a=>parseDate(a.from)<=weekEnd&&parseDate(a.to)>=weekStart)
+  .map(absence=>{
+    const from=parseDate(absence.from),to=parseDate(absence.to);
+    const visibleStart=from>weekStart?from:weekStart;
+    const visibleEnd=to<weekEnd?to:weekEnd;
+    const startCol=visibleStart.getDay()||7,endCol=visibleEnd.getDay()||7;
+    return{absence,startCol,endCol,span:endCol-startCol+1,starts:isSameDay(visibleStart,from),ends:isSameDay(visibleEnd,to),lane:0};
+  })
+  .sort((a,b)=>a.startCol-b.startCol || b.span-a.span || employeeName(a.absence.employeeId).localeCompare(employeeName(b.absence.employeeId)));
+  const laneEnds=[];
+  segs.forEach(s=>{let l=0;while(laneEnds[l] && laneEnds[l]>=s.startCol)l++;s.lane=l;laneEnds[l]=s.endCol;});
+  return segs;
+}
+
+function addEmployee(){const i=document.getElementById("employeeName"),name=i.value.trim();if(!name)return alert("Bitte Namen eintragen.");state.employees.push({id:crypto.randomUUID(),name});i.value="";save();}
+function deleteEmployee(id){if(!confirm("Mitarbeiter entfernen? Vorhandene Abmeldungen bleiben im Verlauf."))return;state.employees=state.employees.filter(e=>e.id!==id);save();}
+function addAbsence(){
+  const employeeId=document.getElementById("absenceEmployee").value,from=document.getElementById("absenceFrom").value,to=document.getElementById("absenceTo").value,reason=document.getElementById("absenceReason").value.trim();
+  if(!employeeId||!from||!to)return alert("Bitte Mitarbeiter und Datum ausfüllen.");
+  if(parseDate(to)<parseDate(from))return alert("Bis darf nicht vor Von liegen.");
+  state.absences.push({id:crypto.randomUUID(),employeeId,from,to,reason});
+  document.getElementById("absenceReason").value=""; save(); showPage("month");
+}
+function parseDiscordMessage(){
+  const raw=document.getElementById("discordMessage").value.trim(); if(!raw)return alert("Bitte Nachricht einfügen.");
+  const p=extractDiscordData(raw); if(!p.name)return alert("Name nicht erkannt."); if(!p.duration)return alert("Datum/Dauer nicht erkannt.");
+  const dates=parseDurationToDates(p.duration); if(!dates)return alert("Dauer konnte nicht gelesen werden.");
+  let emp=findEmployeeByName(p.name); if(!emp){emp={id:crypto.randomUUID(),name:normalizeDisplayName(p.name)};state.employees.push(emp);}
+  state.absences.push({id:crypto.randomUUID(),employeeId:emp.id,from:dates.from,to:dates.to,reason:p.reason||""});
+  document.getElementById("discordMessage").value=""; save(); showPage("month");
+}
+function extractDiscordData(raw){
+  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean),data={name:"",duration:"",reason:""};
+  for(const line of lines){
+    if(/^(name|mitarbeiter)\s*:/i.test(line)||/^(name|mitarbeiter)\s+/i.test(line))data.name=line.replace(/^(name|mitarbeiter)\s*:?\s*/i,"").trim();
+    else if(/^(dauer|datum|date|zeitraum)\s*:/i.test(line)||/^(dauer|datum|date|zeitraum)\s+/i.test(line))data.duration=line.replace(/^(dauer|datum|date|zeitraum)\s*:?\s*/i,"").trim();
+    else if(/^(grund|reason)\s*:/i.test(line)||/^(grund|reason)\s+/i.test(line))data.reason=line.replace(/^(grund|reason)\s*:?\s*/i,"").trim();
+  }
+  if(!data.duration){const m=raw.match(/(heute und morgen|heute|morgen|übermorgen|bis\s+[a-zäöüß0-9. -]+|\d+\s*(?:tag|tage|tagen|woche|wochen)|\d{1,2}\.\d{1,2}\.?\d{0,4}\s*(?:-|bis)\s*\d{1,2}\.\d{1,2}\.?\d{0,4})/i);if(m)data.duration=m[1];}
+  return{ name:cleanup(data.name), duration:cleanup(data.duration), reason:cleanup(data.reason)};
+}
+function cleanup(v){return String(v||"").replace(/^[-–—]\s*/,"").replace(/\s+/g," ").trim()}
+function normalizeDisplayName(n){return cleanup(n).split(" ").filter(Boolean).map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(" ")}
+function findEmployeeByName(n){const x=cleanup(n).toLowerCase();return state.employees.find(e=>e.name.toLowerCase()===x)}
+function parseDurationToDates(text){
+  const value=text.toLowerCase().trim(),today=parseDate(todayISO());let from=new Date(today),to=new Date(today);
+  const range=value.match(/(\d{1,2})\.(\d{1,2})\.?(\d{2,4})?\s*(?:-|bis)\s*(\d{1,2})\.(\d{1,2})\.?(\d{2,4})?/);
+  if(range){const s=dateFromParts(range[1],range[2],range[3]),e=dateFromParts(range[4],range[5],range[6]);if(s&&e)return{from:toISODate(s),to:toISODate(e)}}
+  const single=value.match(/(?:bis\s*)?(\d{1,2})\.(\d{1,2})\.?(\d{2,4})?/); if(single){const d=dateFromParts(single[1],single[2],single[3]);if(d)return{from:toISODate(d),to:toISODate(d)}}
+  if(value.includes("heute")&&value.includes("morgen")){to.setDate(to.getDate()+1);return{from:toISODate(from),to:toISODate(to)}}
+  if(value.includes("übermorgen")||value.includes("uebermorgen")){from.setDate(from.getDate()+2);to=new Date(from);return{from:toISODate(from),to:toISODate(to)}}
+  if(value.includes("morgen")){from.setDate(from.getDate()+1);to=new Date(from);return{from:toISODate(from),to:toISODate(to)}}
+  if(value.includes("heute"))return{from:toISODate(from),to:toISODate(to)}
+  const wd=value.match(/bis\s+(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|mo|di|mi|do|fr|sa|so)/i);
+  if(wd){const target={montag:1,mo:1,dienstag:2,di:2,mittwoch:3,mi:3,donnerstag:4,do:4,freitag:5,fr:5,samstag:6,sa:6,sonntag:7,so:7}[wd[1].toLowerCase()];const cur=today.getDay()||7;let diff=target-cur;if(diff<0)diff+=7;to.setDate(to.getDate()+diff);return{from:toISODate(from),to:toISODate(to)}}
+  const amount=value.match(/(\d+)\s*(tag|tage|tagen|woche|wochen)/i); if(amount){const n=+amount[1],unit=amount[2].toLowerCase();to.setDate(to.getDate()+(unit.startsWith("woche")?n*7-1:n-1));return{from:toISODate(from),to:toISODate(to)}}
+  return null;
+}
+function dateFromParts(day,month,year){let y=year?+year:new Date().getFullYear();if(y<100)y+=2000;const d=new Date(y,+month-1,+day);return Number.isNaN(d.getTime())?null:d}
+function openEditModal(id){
+  const a=state.absences.find(x=>x.id===id); if(!a)return; editingAbsenceId=id;
+  const sel=document.getElementById("editEmployee"); sel.innerHTML=state.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(""); sel.value=a.employeeId;
+  document.getElementById("editFrom").value=a.from; document.getElementById("editTo").value=a.to; document.getElementById("editReason").value=a.reason||"";
+  document.getElementById("editModal").classList.add("active");
+}
+function closeEditModal(){editingAbsenceId=null;document.getElementById("editModal").classList.remove("active")}
+function saveEditedAbsence(){
+  const a=state.absences.find(x=>x.id===editingAbsenceId); if(!a)return;
+  const employeeId=document.getElementById("editEmployee").value,from=document.getElementById("editFrom").value,to=document.getElementById("editTo").value,reason=document.getElementById("editReason").value.trim();
+  if(!employeeId||!from||!to)return alert("Bitte ausfüllen."); if(parseDate(to)<parseDate(from))return alert("Bis darf nicht vor Von liegen.");
+  a.employeeId=employeeId;a.from=from;a.to=to;a.reason=reason;closeEditModal();save();
+}
+function deleteAbsence(id){if(!confirm("Abmeldung löschen?"))return;state.absences=state.absences.filter(a=>a.id!==id);save()}
+function renderWeekTable(){
+  const {monday,sunday}=getWeekRange(); document.getElementById("weekInfo").textContent=`${monday.toLocaleDateString("de-DE")} bis ${sunday.toLocaleDateString("de-DE")}`;
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  const rows=state.absences.filter(a=>parseDate(a.from)<=sunday&&parseDate(a.to)>=monday).filter(a=>(employeeName(a.employeeId)+" "+(a.reason||"")).toLowerCase().includes(q));
+  if(!rows.length){document.getElementById("weekTable").innerHTML='<div class="empty">Keine Abmeldungen in dieser Woche.</div>';return}
+  document.getElementById("weekTable").innerHTML=tableHtml(rows,true);
+}
+function tableHtml(rows,withStatus=false){
+  return `<table class="table"><thead><tr><th>Mitarbeiter</th><th>Von</th><th>Bis</th><th>Dauer</th><th>Grund</th>${withStatus?'<th>Status</th>':''}<th></th></tr></thead><tbody>${rows.map(a=>`<tr><td><strong>${escapeHtml(employeeName(a.employeeId))}</strong></td><td>${formatDate(a.from)}</td><td>${formatDate(a.to)}</td><td>${daysBetween(a.from,a.to)} Tag(e)</td><td>${escapeHtml(a.reason||"-")}</td>${withStatus?`<td>${parseDate(a.from)<=parseDate(todayISO())&&parseDate(a.to)>=parseDate(todayISO())?'<span class="pill">Heute aktiv</span>':'<span style="color:#8fa2c0">In Woche</span>'}</td>`:''}<td><button class="small" onclick="openEditModal('${a.id}')">Bearbeiten</button> <button class="small danger" onclick="deleteAbsence('${a.id}')">Löschen</button></td></tr>`).join("")}</tbody></table>`;
+}
+function renderAllTable(){const rows=[...state.absences].sort((a,b)=>b.from.localeCompare(a.from));document.getElementById("allTable").innerHTML=rows.length?tableHtml(rows,false):'<div class="empty">Noch keine Abmeldungen gespeichert.</div>'}
+function renderEmployees(){
+  const sel=document.getElementById("absenceEmployee"); sel.innerHTML=state.employees.length?state.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(""):'<option value="">Noch kein Mitarbeiter angelegt</option>';
+  document.getElementById("employeeList").innerHTML=state.employees.length?`<table class="table"><tbody>${state.employees.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<tr><td>${escapeHtml(e.name)}</td><td style="text-align:right"><button class="small danger" onclick="deleteEmployee('${e.id}')">Entfernen</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Noch keine Mitarbeiter angelegt.</div>';
+}
+function renderCurrentPage(){if(currentPage==="month")renderMonthCalendar();if(currentPage==="week")renderWeekTable();if(currentPage==="entry")renderEmployees();if(currentPage==="all")renderAllTable();}
+function render(){renderCurrentPage()}
+function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="bennys-moonlight-abmeldungen-backup.json";a.click();URL.revokeObjectURL(url)}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.employees||!x.absences)throw new Error();state=x;save()}catch{alert("Backup konnte nicht gelesen werden.")}};r.readAsText(f)}
+function escapeHtml(t){return String(t).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function calendarWeek(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-yearStart)/86400000)+1)/7)}
+document.getElementById("editModal").addEventListener("click",e=>{if(e.target.id==="editModal")closeEditModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeEditModal()});
+document.getElementById("search").addEventListener("input",renderWeekTable);
+document.getElementById("absenceFrom").value=todayISO();document.getElementById("absenceTo").value=todayISO();
+const now=new Date();document.getElementById("todayLabel").textContent=now.toLocaleDateString("de-DE",{day:"2-digit",month:"long",year:"numeric"});document.getElementById("kwLabel").textContent=`${now.toLocaleDateString("de-DE",{weekday:"long"})}, KW ${calendarWeek(now)}`;
+render();
+</script>
+</body>
+</html>
