@@ -708,6 +708,44 @@ function saveEditedAbsence(){
   a.employeeId=employeeId;a.from=from;a.to=to;a.reason=reason;closeEditModal();save();
 }
 function deleteAbsence(id){if(!confirm("Abmeldung löschen?"))return;state.absences=state.absences.filter(a=>a.id!==id);save()}
+
+async function loadAbsencesFromSupabase(){
+  try{
+    const {data,error}=await supabaseClient
+      .from("abmeldungen")
+      .select("id,mitarbeiter,von,bis,grund,erstellt_am")
+      .order("erstellt_am",{ascending:false});
+    if(error)throw error;
+    if(!Array.isArray(data))return;
+
+    const employeesByName=new Map(state.employees.map(e=>[e.name.toLowerCase(),e]));
+    const absences=[];
+
+    data.forEach(row=>{
+      const name=String(row.mitarbeiter||"").trim()||"Unbekannt";
+      const key=name.toLowerCase();
+      let emp=employeesByName.get(key);
+      if(!emp){
+        emp={id:crypto.randomUUID(),name};
+        state.employees.push(emp);
+        employeesByName.set(key,emp);
+      }
+      absences.push({
+        id:row.id||crypto.randomUUID(),
+        employeeId:emp.id,
+        from:row.von,
+        to:row.bis,
+        reason:row.grund||""
+      });
+    });
+
+    state.absences=absences.filter(a=>a.from&&a.to);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+    render();
+  }catch(err){
+    console.error("Supabase Laden Fehler:",err);
+  }
+}
 async function saveAbsenceToSupabase(absence){
   try{
     const {error}=await supabaseClient
@@ -752,6 +790,7 @@ document.getElementById("search").addEventListener("input",renderWeekTable);
 document.getElementById("absenceFrom").value=todayISO();document.getElementById("absenceTo").value=todayISO();
 const now=new Date();document.getElementById("todayLabel").textContent=now.toLocaleDateString("de-DE",{day:"2-digit",month:"long",year:"numeric"});document.getElementById("kwLabel").textContent=`${now.toLocaleDateString("de-DE",{weekday:"long"})}, KW ${calendarWeek(now)}`;
 render();
+loadAbsencesFromSupabase();
 </script>
 </body>
 </html>
