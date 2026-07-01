@@ -557,6 +557,7 @@ input:focus,select:focus,textarea:focus{
 
 <script>
 const STORAGE_KEY="mitarbeiter_abmeldungen_v1";
+const FORMSPREE_ENDPOINT="https://formspree.io/f/mvzjwdln";
 let state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"employees":[],"absences":[]}');
 let currentPage="month",monthOffset=0,weekOffset=0,editingAbsenceId=null;
 const colors=["#8b5cf6","#4e8cff","#20b9d6","#2cc7a0","#d9b742","#e98336","#ef5350","#d84b8f"];
@@ -643,19 +644,23 @@ function packWeekSegments(weekStart,weekEnd){
 
 function addEmployee(){const i=document.getElementById("employeeName"),name=i.value.trim();if(!name)return alert("Bitte Namen eintragen.");state.employees.push({id:crypto.randomUUID(),name});i.value="";save();}
 function deleteEmployee(id){if(!confirm("Mitarbeiter entfernen? Vorhandene Abmeldungen bleiben im Verlauf."))return;state.employees=state.employees.filter(e=>e.id!==id);save();}
-function addAbsence(){
+async function addAbsence(){
   const employeeId=document.getElementById("absenceEmployee").value,from=document.getElementById("absenceFrom").value,to=document.getElementById("absenceTo").value,reason=document.getElementById("absenceReason").value.trim();
   if(!employeeId||!from||!to)return alert("Bitte Mitarbeiter und Datum ausfüllen.");
   if(parseDate(to)<parseDate(from))return alert("Bis darf nicht vor Von liegen.");
-  state.absences.push({id:crypto.randomUUID(),employeeId,from,to,reason});
+  const absence={id:crypto.randomUUID(),employeeId,from,to,reason};
+  state.absences.push(absence);
+  await sendAbsenceToFormspree(absence);
   document.getElementById("absenceReason").value=""; save(); showPage("month");
 }
-function parseDiscordMessage(){
+async function parseDiscordMessage(){
   const raw=document.getElementById("discordMessage").value.trim(); if(!raw)return alert("Bitte Nachricht einfügen.");
   const p=extractDiscordData(raw); if(!p.name)return alert("Name nicht erkannt."); if(!p.duration)return alert("Datum/Dauer nicht erkannt.");
   const dates=parseDurationToDates(p.duration); if(!dates)return alert("Dauer konnte nicht gelesen werden.");
   let emp=findEmployeeByName(p.name); if(!emp){emp={id:crypto.randomUUID(),name:normalizeDisplayName(p.name)};state.employees.push(emp);}
-  state.absences.push({id:crypto.randomUUID(),employeeId:emp.id,from:dates.from,to:dates.to,reason:p.reason||""});
+  const absence={id:crypto.randomUUID(),employeeId:emp.id,from:dates.from,to:dates.to,reason:p.reason||""};
+  state.absences.push(absence);
+  await sendAbsenceToFormspree(absence);
   document.getElementById("discordMessage").value=""; save(); showPage("month");
 }
 function extractDiscordData(raw){
@@ -700,6 +705,27 @@ function saveEditedAbsence(){
   a.employeeId=employeeId;a.from=from;a.to=to;a.reason=reason;closeEditModal();save();
 }
 function deleteAbsence(id){if(!confirm("Abmeldung löschen?"))return;state.absences=state.absences.filter(a=>a.id!==id);save()}
+async function sendAbsenceToFormspree(absence){
+  try{
+    const payload={
+      _subject:"Neue Benny's Moonlight Abmeldung",
+      mitarbeiter:employeeName(absence.employeeId),
+      von:formatDate(absence.from),
+      bis:formatDate(absence.to),
+      dauer:`${daysBetween(absence.from,absence.to)} Tag(e)`,
+      grund:absence.reason||"-",
+      gespeichert_am:new Date().toLocaleString("de-DE")
+    };
+    const res=await fetch(FORMSPREE_ENDPOINT,{
+      method:"POST",
+      headers:{"Accept":"application/json","Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok)throw new Error("Formspree Fehler");
+  }catch(err){
+    alert("Die Abmeldung wurde lokal gespeichert, konnte aber nicht an Formspree gesendet werden. Bitte Internet/Formspree prüfen.");
+  }
+}
 function renderWeekTable(){
   const {monday,sunday}=getWeekRange(); document.getElementById("weekInfo").textContent=`${monday.toLocaleDateString("de-DE")} bis ${sunday.toLocaleDateString("de-DE")}`;
   const q=document.getElementById("search").value.toLowerCase().trim();
